@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Melle\'s Soundboard</string>
+    <string name="action_sync">Nieuwe sounds ophalen!</string>
+    <string name="action_settings">Instellingen</string>
+    <string name="choose_file">Kies Bestand</string>
+</resources>

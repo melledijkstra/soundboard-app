@@ -1,0 +1,18 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="nl.melledijkstra.mellesoundboard.ui.MainActivity">
+
+    <item
+        android:id="@+id/action_sync"
+        android:title="@string/action_sync"
+        android:icon="@drawable/ic_sync"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_delete_sounds"
+        android:title="@string/delete_local_database"
+        android:icon="@drawable/ic_action_trash"
+        app:showAsAction="ifRoom" />
+
+</menu>
