@@ -27,21 +27,23 @@ import nl.melledijkstra.mellesoundboard.SoundManager;
 public class DownloadSoundTask extends AsyncTask<Sound, Integer, String> {
 
     private static final String TAG = DownloadSoundTask.class.getSimpleName();
+    private final Context context;
 
-    private OnDownloadDone listener;
+    private downloadTaskListener listener;
 
-    // The context who calls the DownloadTask
-    private Context context;
+    private int status;
     // The optional dialog for feedback to the user
     @Nullable
     private ProgressDialog mProgressDialog;
     private Sound sound;
+    private boolean errorCaught;
 
+    // The wakelock makes sure the download doesn't stop when going to sleep
     private PowerManager.WakeLock mWakeLock;
 
-    public DownloadSoundTask(Context context, @Nullable ProgressDialog dialog, OnDownloadDone listener) {
-        this.listener = listener;
+    public DownloadSoundTask(Context context,downloadTaskListener listener, @Nullable ProgressDialog dialog) {
         this.context = context;
+        this.listener = listener;
         this.mProgressDialog = dialog;
     }
 
@@ -58,10 +60,13 @@ public class DownloadSoundTask extends AsyncTask<Sound, Integer, String> {
             connection = (HttpURLConnection) url.openConnection();
             connection.connect();
 
+            status = connection.getResponseCode();
+
             // expect HTTP 200 OK, so we don't mistakenly save error report
             // instead of the file
-            if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
-                return "Server returned HTTP " + connection.getResponseCode()
+            if (status != HttpURLConnection.HTTP_OK) {
+                errorCaught = true;
+                return "Server returned HTTP " + status
                         + " " + connection.getResponseMessage();
             }
 
@@ -69,7 +74,7 @@ public class DownloadSoundTask extends AsyncTask<Sound, Integer, String> {
             // might be -1: server did not report the length
             int soundLength = connection.getContentLength();
 
-            if(Environment.getExternalStorageState() == Environment.MEDIA_MOUNTED) {
+            if(Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
                 // download the actual sound
                 input = connection.getInputStream();
                 output = new FileOutputStream(SoundManager.MEDIA_PATH+sound.getRemoteFileName());
@@ -92,11 +97,14 @@ public class DownloadSoundTask extends AsyncTask<Sound, Integer, String> {
                 }
 
             } else {
+                errorCaught = true;
                 Log.d(TAG, "External storage not available, so cannot write sound file");
+                return "Could not save file to external storage";
             }
 
         } catch (Exception e) {
             Log.d(TAG, "download failed: "+e.getMessage());
+            errorCaught = true;
             e.printStackTrace();
         } finally {
             try {
@@ -146,15 +154,14 @@ public class DownloadSoundTask extends AsyncTask<Sound, Integer, String> {
         if (mProgressDialog != null) {
             mProgressDialog.dismiss();
         }
-        if(result != null) {
-            Toast.makeText(context, "Download Error: "+result, Toast.LENGTH_SHORT).show();
-        } else {
-            listener.onDownloadDone(sound);
-            Toast.makeText(context, String.format("Sound \"%s\" Downloaded", sound.name), Toast.LENGTH_SHORT).show();
+        if(status >= 300 || errorCaught) {
+            listener.onDownloadFailed(status);
+            Log.e(TAG, "Download failed with status: "+status+", url: "+sound.downloadLink);
         }
     }
 
-    public interface OnDownloadDone {
+    public interface downloadTaskListener {
         void onDownloadDone(Sound sound);
+        void onDownloadFailed(int status);
     }
 }

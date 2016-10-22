@@ -90,7 +90,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             });
         }
 
-        adapter = new SoundBoardAdapter(this, soundManager.sounds);
+        adapter = new SoundBoardAdapter(this, soundManager.getSounds());
 
         // Attach SoundBoardAdapter to gridview to fill grid when sounds update
         GridView gridView = (GridView) findViewById(R.id.theSoundBoard);
@@ -190,7 +190,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private void refreshGridViewWithSounds() {
         soundManager.syncLocalSounds();
         Log.d(TAG, "Number of sounds loaded: "+soundManager.getSounds().size());
-        adapter.notifyDataSetChanged();
         if(refresher.isRefreshing()) refresher.setRefreshing(false);
     }
 

@@ -78,7 +78,7 @@ public class Sound {
 
     @Override
     public String toString() {
-        return (this.soundFile != null) ? String.format("Sound{name: %s, soundFile: %s, downloaded: %b }",name,soundFile.getPath(),downloaded) : String.format("Sound{name: %s, downloaded: %b }",name,downloaded);
+        return (this.soundFile != null) ? String.format("Sound{name: %s, soundFile: %s, downloaded: %b, downloadLink: %s }",name,soundFile.getPath(),downloaded,downloadLink) : String.format("Sound{name: %s, downloaded: %b, downloadLink: %s }",name,downloaded,downloadLink);
     }
 
     public File getSoundFile() {

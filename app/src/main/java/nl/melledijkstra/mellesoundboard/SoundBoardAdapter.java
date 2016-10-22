@@ -65,8 +65,6 @@ public class SoundBoardAdapter extends BaseAdapter {
         soundPicture.setImageResource(R.drawable.default_cover);
         soundName.setText(sound.name);
 
-        Log.d(TAG, "Grid item is generated");
-
         return v;
     }
 

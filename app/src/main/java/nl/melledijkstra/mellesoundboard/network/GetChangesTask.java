@@ -89,18 +89,6 @@ public class GetChangesTask extends AsyncTask<Integer, Void, String> {
     @Override
     protected void onPostExecute(String result) {
         super.onPostExecute(result);
-        /*if (result != null && !result.isEmpty()) {
-            Log.d(TAG, result);
-            try {
-                JSONArray json = new JSONArray(result);
-                if (listener != null) {
-                    listener.onHttpSuccess(json);
-                }
-            } catch (JSONException e) {
-                Log.d(TAG, "Could not create JSON from: "+result);
-                e.printStackTrace();
-            }
-        }*/
         if(result != null && !result.isEmpty())
             Log.d(TAG, result);
         if(listener == null)

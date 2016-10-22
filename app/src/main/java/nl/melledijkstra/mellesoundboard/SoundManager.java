@@ -1,7 +1,6 @@
 package nl.melledijkstra.mellesoundboard;
 
 import android.app.AlertDialog;
-import android.app.DownloadManager;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -36,7 +35,7 @@ import nl.melledijkstra.mellesoundboard.network.GetChangesTask;
 public class SoundManager implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener,
         DeleteSoundTask.OnDeletedListener,
         GetChangesTask.onChangesListener,
-        DownloadSoundTask.OnDownloadDone {
+        DownloadSoundTask.downloadTaskListener {
 
     /** The Place where sounds are stored */
     public static final String MEDIA_PATH = Environment.getExternalStorageDirectory().getPath() + "/mellesoundboard/";
@@ -55,8 +54,6 @@ public class SoundManager implements MediaPlayer.OnPreparedListener, MediaPlayer
 
     /** The sounds for the soundboard */
     public ArrayList<Sound> sounds;
-
-    private long downloadReference;
 
     public SoundManager(Context context, onSoundsArrayUpdateListener listener) {
         this.context = context;
@@ -135,15 +132,21 @@ public class SoundManager implements MediaPlayer.OnPreparedListener, MediaPlayer
     }
 
     private void downloadSound(Sound sound) {
-        // TODO: use download manager
-        DownloadManager downloadManager = (DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE);
-        DownloadManager.Request request = new DownloadManager.Request(Uri.parse(sound.downloadLink));
-        request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI);
-        request.setTitle("Downloading "+sound.name);
-        request.setDescription("url: "+sound.downloadLink);
-        // Remote filename should be the same as local filename, maybe this will change in the future
-        request.setDestinationInExternalPublicDir("/mellesoundboard", sound.getRemoteFileName());
-        downloadReference = downloadManager.enqueue(request);
+        Log.d(TAG, "Sound to be downloaded - " + sound.downloadLink);
+        ProgressDialog downloadDialog = new ProgressDialog(context);
+        downloadDialog.setMessage("Downloading "+sound.name);
+        downloadDialog.setIndeterminate(true);
+        downloadDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+        downloadDialog.setCancelable(true);
+
+        final DownloadSoundTask downloadSoundTask = new DownloadSoundTask(context, this, downloadDialog);
+
+        downloadDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface dialog) {
+                downloadSoundTask.cancel(true);
+            }
+        });
     }
 
     public void syncWithServer() {
@@ -190,33 +193,17 @@ public class SoundManager implements MediaPlayer.OnPreparedListener, MediaPlayer
         soundsDB.close();
     }
 
-    /**
-     * Try to download the given sounds and check which need to be updated in database
-     * @param new_sounds The sounds needed for download
-     */
-    private void downloadNewSounds(ArrayList<Sound> new_sounds) {
-        for (Sound sound : new_sounds) {
-            if(soundsDB.soundExists(sound.id)) {
-                soundsDB.deleteSound(sound.id);
-                sound.deleteFile();
-            }
-            ProgressDialog dialog = new ProgressDialog(context);
-            dialog.setMessage("Downloading "+sound.name);
-            new DownloadSoundTask(context, dialog, this).execute(sound);
-        }
-        soundsDB.close();
+    @Override
+    public void onDownloadDone(Sound sound) {
+        // TODO: THIS PROBABLY ISNT USED ANYMORE!!!
+        // TODO: refactor this method, sounds should not be downloaded in bulk anymore!
+        // File is downloaded store in database
     }
 
     @Override
-    public void onDownloadDone(Sound sound) {
-        // TODO: refactor this method, sounds should not be downloaded in bulk anymore!
-        // File is downloaded store in database
-        soundsDB.createSound(sound);
-        // When everything is downloaded and set in database then set the new sync time
-        PreferenceManager.getDefaultSharedPreferences(context)
-            .edit()
-            .putInt(Config.Preferences.LAST_SYNC_TIME, (int) (System.currentTimeMillis() / 1000L))
-            .apply();
+    public void onDownloadFailed(int status) {
+        Toast.makeText(context, "Could not download this sound, maybe try again?", Toast.LENGTH_SHORT).show();
+        Log.d(TAG, "download failed with status: "+status);
     }
 
     public void downloadComplete(Intent intent) {
@@ -250,6 +237,11 @@ public class SoundManager implements MediaPlayer.OnPreparedListener, MediaPlayer
         } else {
             Toast.makeText(context, "Already synced with server!", Toast.LENGTH_SHORT).show();
         }
+        // Set the new syncing time to be now
+        PreferenceManager.getDefaultSharedPreferences(context)
+                .edit()
+                .putInt(Config.Preferences.LAST_SYNC_TIME, (int) (System.currentTimeMillis() / 1000L))
+                .apply();
     }
 
     @Override

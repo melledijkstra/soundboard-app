@@ -108,16 +108,15 @@ public class SoundsDatabaseHelper extends SQLiteOpenHelper {
 
         Cursor c = db.rawQuery("SELECT * FROM "+Sound.TABLE_NAME+" WHERE "+Sound.Columns.ID+" = "+sound_id, null);
 
-        db.close();
-
+        Sound sound = null;
         if(c != null) {
             c.moveToFirst();
-            Sound sound = fillSound(c);
+            sound = fillSound(c);
             c.close();
-            return sound;
         }
 
-        return null;
+        db.close();
+        return sound;
     }
 
 //    public int updateSound(Sound sound) {
@@ -141,14 +140,15 @@ public class SoundsDatabaseHelper extends SQLiteOpenHelper {
 
     private Sound fillSound(Cursor c) {
         Sound sound = new Sound();
-        sound.id        = c.getLong(c.getColumnIndex(Sound.Columns.ID));
-        sound.remote_id = c.getLong(c.getColumnIndex(Sound.Columns.REMOTE_ID));
-        sound.name      = c.getString(c.getColumnIndex(Sound.Columns.NAME));
+        sound.id            = c.getLong(c.getColumnIndex(Sound.Columns.ID));
+        sound.remote_id     = c.getLong(c.getColumnIndex(Sound.Columns.REMOTE_ID));
+        sound.name          = c.getString(c.getColumnIndex(Sound.Columns.NAME));
         sound.setLocalFileName(c.getString(c.getColumnIndex(Sound.Columns.LOCAL_FILE_NAME)));
         sound.setRemoteFileName(c.getString(c.getColumnIndex(Sound.Columns.FILE_NAME)));
         sound.setDownloaded(c.getInt(c.getColumnIndex(Sound.Columns.DOWNLOADED)) > 0);
-        sound.createdAt = c.getInt(c.getColumnIndex(Sound.Columns.CREATED_AT));
-        sound.updatedAt = c.getInt(c.getColumnIndex(Sound.Columns.UPDATED_AT));
+        sound.downloadLink  = c.getString(c.getColumnIndex(Sound.Columns.DOWNLOAD_LINK));
+        sound.createdAt     = c.getInt(c.getColumnIndex(Sound.Columns.CREATED_AT));
+        sound.updatedAt     = c.getInt(c.getColumnIndex(Sound.Columns.UPDATED_AT));
         return sound;
     }
 
