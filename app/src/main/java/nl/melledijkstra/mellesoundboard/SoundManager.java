@@ -4,7 +4,6 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -26,10 +25,7 @@ import nl.melledijkstra.mellesoundboard.network.GetChangesTask;
 
 /**
  * The SoundManager knows all about the sounds.
- * It knows:
- * - How to download the files
- * - Which sound need to be downloaded
- * - Create CRUD functionality local and on API
+ * All the sound functionality is done with this class (like CRUD operations)
  * Created by melle on 5-10-2016.
  */
 public class SoundManager implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener,
@@ -77,19 +73,6 @@ public class SoundManager implements MediaPlayer.OnPreparedListener, MediaPlayer
         sounds.clear();
         sounds.addAll(soundsDB.getAllSounds());
         listener.soundsRenewed();
-        /*// Get sound directory
-        File soundsDir = new File(SoundManager.MEDIA_PATH);
-        Log.i(TAG, "Checking "+SoundManager.MEDIA_PATH+" for sound files");
-        File[] files = soundsDir.listFiles();
-        if(files == null || files.length == 0) return;
-        Log.i(TAG, "Files: "+ Arrays.toString(files));
-        // Get default sound cover, TODO: create dynamic cover functionality
-        Bitmap defaultImage = BitmapFactory.decodeResource(context.getResources(),R.drawable.default_cover);
-        for(File file : files) {
-            if(Utils.stringContainsItemFromList(file.getName(),allowedExtensions)) {
-                sounds.add(new Sound(file.getName(),file, defaultImage));
-            }
-        }*/
     }
 
     public Sound getSound(int id) {
@@ -102,7 +85,7 @@ public class SoundManager implements MediaPlayer.OnPreparedListener, MediaPlayer
 
     public void playSound(int position) {
         final Sound sound = sounds.get(position);
-        if(sound.isDownloaded() && sound.getSoundFile().exists()) {
+        if(sound.getSoundFile() != null && sound.getSoundFile().exists()) {
             Uri uri = Uri.fromFile(sound.getSoundFile());
             try {
                 Log.d(TAG,"playing: "+uri.getPath());
@@ -133,20 +116,26 @@ public class SoundManager implements MediaPlayer.OnPreparedListener, MediaPlayer
 
     private void downloadSound(Sound sound) {
         Log.d(TAG, "Sound to be downloaded - " + sound.downloadLink);
-        ProgressDialog downloadDialog = new ProgressDialog(context);
-        downloadDialog.setMessage("Downloading "+sound.name);
-        downloadDialog.setIndeterminate(true);
-        downloadDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-        downloadDialog.setCancelable(true);
+        if(Utils.deviceHasInternet(context)) {
+            ProgressDialog downloadDialog = new ProgressDialog(context);
+            downloadDialog.setMessage("Downloading "+sound.name);
+            downloadDialog.setIndeterminate(true);
+            downloadDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+            downloadDialog.setCancelable(true);
 
-        final DownloadSoundTask downloadSoundTask = new DownloadSoundTask(context, this, downloadDialog);
+            final DownloadSoundTask downloadSoundTask = new DownloadSoundTask(context, this, downloadDialog);
 
-        downloadDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-            @Override
-            public void onCancel(DialogInterface dialog) {
-                downloadSoundTask.cancel(true);
-            }
-        });
+            downloadDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                @Override
+                public void onCancel(DialogInterface dialog) {
+                    downloadSoundTask.cancel(true);
+                }
+            });
+
+            downloadSoundTask.execute(sound);
+        } else {
+            Toast.makeText(context, "You don't have wifi connection", Toast.LENGTH_SHORT).show();
+        }
     }
 
     public void syncWithServer() {
@@ -187,7 +176,7 @@ public class SoundManager implements MediaPlayer.OnPreparedListener, MediaPlayer
     public void onDeleted(Sound sound) {
         // The sound is deleted on server. Now delete locally from db and the file itself
         soundsDB.deleteSound(sound.id);
-        sound.deleteFile();
+        sound.deleteFileIfExists();
         syncLocalSounds();
         Toast.makeText(context, "Deleted "+sound.name, Toast.LENGTH_SHORT).show();
         soundsDB.close();
@@ -195,20 +184,22 @@ public class SoundManager implements MediaPlayer.OnPreparedListener, MediaPlayer
 
     @Override
     public void onDownloadDone(Sound sound) {
-        // TODO: THIS PROBABLY ISNT USED ANYMORE!!!
-        // TODO: refactor this method, sounds should not be downloaded in bulk anymore!
-        // File is downloaded store in database
+        Log.d(TAG, "sound finished downloading - Sound{ downloaded: "+sound.isDownloaded()+", localfilename: "+sound.getLocalFileName()+" }");
+        soundsDB.updateSound(sound);
+        syncLocalSounds();
     }
 
     @Override
     public void onDownloadFailed(int status) {
         Toast.makeText(context, "Could not download this sound, maybe try again?", Toast.LENGTH_SHORT).show();
-        Log.d(TAG, "download failed with status: "+status);
     }
 
-    public void downloadComplete(Intent intent) {
-        // file is downloaded
-        // TODO: update the sound, that file is downloaded
+    @Override
+    public void onSoundNotFound(Sound sound) {
+        Toast.makeText(context, "Sound was deleted on server!", Toast.LENGTH_SHORT).show();
+        soundsDB.deleteSound(sound.id);
+        sound.deleteFileIfExists();
+        syncLocalSounds();
     }
 
     @Override
@@ -252,12 +243,24 @@ public class SoundManager implements MediaPlayer.OnPreparedListener, MediaPlayer
 
     public boolean deleteAllSounds(String yesiamsure) {
         if(yesiamsure.equals("yesiamsure")) {
+            // Make sure we delete every file before deleting database data
+            for (Sound sound : sounds) {
+                sound.deleteFileIfExists();
+            }
             if(soundsDB.deleteAllSounds(true)) {
                 syncLocalSounds();
                 return true;
             }
         }
         return false;
+    }
+
+    public boolean isPlaying() {
+        return mp.isPlaying();
+    }
+
+    public void stopPlaying() {
+        mp.reset();
     }
 
     public interface onSoundsArrayUpdateListener {

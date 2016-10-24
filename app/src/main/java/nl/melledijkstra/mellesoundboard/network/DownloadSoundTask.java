@@ -56,7 +56,7 @@ public class DownloadSoundTask extends AsyncTask<Sound, Integer, String> {
         OutputStream output = null;
         HttpURLConnection connection = null;
         try {
-            URL url = new URL(sounds[0].downloadLink);
+            URL url = new URL(sound.downloadLink);
             connection = (HttpURLConnection) url.openConnection();
             connection.connect();
 
@@ -86,6 +86,7 @@ public class DownloadSoundTask extends AsyncTask<Sound, Integer, String> {
                 while ((count = input.read(data)) != -1) {
                     // allow canceling with back button
                     if(isCancelled()) {
+                        mWakeLock.release();
                         input.close();
                         return null;
                     }
@@ -95,6 +96,9 @@ public class DownloadSoundTask extends AsyncTask<Sound, Integer, String> {
                         publishProgress((int) (total * 100 / soundLength));
                     output.write(data, 0, count);
                 }
+
+                sound.setLocalFileName(sound.getRemoteFileName());
+                sound.setDownloaded(true);
 
             } else {
                 errorCaught = true;
@@ -113,7 +117,6 @@ public class DownloadSoundTask extends AsyncTask<Sound, Integer, String> {
                 if(input != null) input.close();
             } catch (IOException e) {
                 e.printStackTrace();
-                Log.d(TAG, "Could not cleanup!!! - "+e.getMessage());
             }
             if(connection != null) {
                 connection.disconnect();
@@ -151,17 +154,36 @@ public class DownloadSoundTask extends AsyncTask<Sound, Integer, String> {
     protected void onPostExecute(String result) {
         super.onPostExecute(result);
         mWakeLock.release();
-        if (mProgressDialog != null) {
+        if (mProgressDialog != null && mProgressDialog.isShowing()) {
             mProgressDialog.dismiss();
         }
-        if(status >= 300 || errorCaught) {
+        if(status == 404) {
+            listener.onSoundNotFound(sound);
+        } else if(status >= 300 || errorCaught) {
             listener.onDownloadFailed(status);
             Log.e(TAG, "Download failed with status: "+status+", url: "+sound.downloadLink);
+        } else {
+            listener.onDownloadDone(sound);
         }
     }
 
     public interface downloadTaskListener {
+        /**
+         * Runs when download went fine
+         * @param sound The sound file with updated data like the localfile name. This object should be stored in database again
+         */
         void onDownloadDone(Sound sound);
+
+        /**
+         * Runs when download failed
+         * @param status The status of the server, or 0 if server didn't even give a status
+         */
         void onDownloadFailed(int status);
+
+        /**
+         * This method runs when the server responded with a 404 Not Found, which means this sound should not exist
+         * @param sound The sound which couldn't be found and should be deleted
+         */
+        void onSoundNotFound(Sound sound);
     }
 }

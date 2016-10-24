@@ -30,6 +30,7 @@ public class DeleteSoundTask extends AsyncTask<Sound, Void, String> {
     private Sound sound;
 
     private OnDeletedListener listener;
+    private int status;
 
     public DeleteSoundTask(OnDeletedListener listener, @Nullable Context context) {
         this.context = context;
@@ -43,7 +44,14 @@ public class DeleteSoundTask extends AsyncTask<Sound, Void, String> {
             URL url = new URL(Config.getApiUrl()+Sound.MODEL_NAME+'/'+sound.remote_id);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             // Set correct HTTP method
+            connection.setConnectTimeout(5000);
+            connection.setReadTimeout(10000);
             connection.setRequestMethod("DELETE");
+            connection.connect();
+
+            // TODO: check response code if request went fine
+            status = connection.getResponseCode();
+
             try {
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
                 StringBuilder stringBuilder = new StringBuilder();
@@ -67,9 +75,9 @@ public class DeleteSoundTask extends AsyncTask<Sound, Void, String> {
     @Override
     protected void onPostExecute(String result) {
         super.onPostExecute(result);
+        Log.d(TAG, "Something went wrong from request to "+Config.getApiUrl()+Sound.MODEL_NAME+'/'+sound.remote_id);
         if (result == null && context != null) {
-            Log.d(TAG, "Something went wrong from request to "+Config.getApiUrl()+sound.id);
-            Toast.makeText(context, "Something went wrong from request to "+Config.getApiUrl()+sound.id, Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "Something went wrong from request to "+Config.getApiUrl()+Sound.MODEL_NAME+'/'+sound.remote_id, Toast.LENGTH_SHORT).show();
         } else {
             listener.onDeleted(sound);
         }

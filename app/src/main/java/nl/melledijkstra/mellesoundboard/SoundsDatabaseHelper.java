@@ -119,17 +119,16 @@ public class SoundsDatabaseHelper extends SQLiteOpenHelper {
         return sound;
     }
 
-//    public int updateSound(Sound sound) {
-//        SQLiteDatabase db = getWritableDatabase();
-//
-//        ContentValues values = new ContentValues();
-//        values.put(Sound.Columns.NAME, sound.name);
-//        values.put(Sound.Columns.UPDATED_AT, sound.createdAt);
-//        values.put(Sound.Columns.FILE_NAME, sound.getRemoteFileName());
-//        values.put(Sound.Columns.REMOTE_ID, sound.remote_id);
-//
-//        return db.update(Sound.TABLE_NAME, values, Sound.Columns.ID+" = ?", new String[] { String.valueOf(sound.getId()) });
-//    }
+    public int updateSound(Sound sound) {
+        SQLiteDatabase db = getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(Sound.Columns.NAME, sound.name);
+        values.put(Sound.Columns.LOCAL_FILE_NAME, sound.getLocalFileName());
+        values.put(Sound.Columns.UPDATED_AT, sound.createdAt);
+
+        return db.update(Sound.TABLE_NAME, values, Sound.Columns.ID+" = ?", new String[] { String.valueOf(sound.id) });
+    }
 
     public boolean deleteSound(long sound_id) {
         SQLiteDatabase db = getWritableDatabase();

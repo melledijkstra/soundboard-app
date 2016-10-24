@@ -3,6 +3,7 @@ package nl.melledijkstra.mellesoundboard;
 import android.graphics.Bitmap;
 import android.provider.BaseColumns;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import java.io.File;
 
@@ -15,6 +16,7 @@ public class Sound {
     public static final String MODEL_NAME = "sounds";
     // TABLE NAME
     public static final String TABLE_NAME = "sound";
+    private static final String TAG = Sound.class.getSimpleName();
 
     public class Columns {
         public static final String ID = BaseColumns._ID;
@@ -28,7 +30,7 @@ public class Sound {
         public static final String DOWNLOAD_LINK = "download_link";
     }
 
-    /** The id of the Sound, this represents the id of the database */
+    /** The id of the Sound, this represents the id in the database, NOT from remote server! */
     public long id;
 
     /**
@@ -89,10 +91,6 @@ public class Sound {
         return remoteFileName;
     }
 
-    public long getId() {
-        return id;
-    }
-
     public void setRemoteFileName(String remoteFileName) {
         this.remoteFileName = remoteFileName;
     }
@@ -109,9 +107,15 @@ public class Sound {
         return localFileName;
     }
 
+    /**
+     * Sets the local filename location when the file exists, sets it to null if file doesn't exist
+     * @param localFileName The name of the local filename
+     */
     public void setLocalFileName(@Nullable String localFileName) {
-        if(localFileName != null && Utils.stringContainsItemFromList(localFileName, SoundManager.allowedExtensions) && new File(SoundManager.MEDIA_PATH + localFileName).exists()) {
+        if(new File(SoundManager.MEDIA_PATH + localFileName).exists()) {
+            this.localFileName = localFileName;
             soundFile = new File(SoundManager.MEDIA_PATH + localFileName);
+            downloaded = true;
         } else {
             soundFile = null;
         }
@@ -119,10 +123,10 @@ public class Sound {
 
     /**
      * Deletes the file associated with this sound object
-     * @return true if this file was deleted, false otherwise.
+     * @return true if this file was deleted, false otherwise (also when file doesn't exists).
      */
-    public boolean deleteFile() {
-        return soundFile.delete();
+    public boolean deleteFileIfExists() {
+        return soundFile != null && soundFile.exists() && soundFile.delete();
     }
 
 }

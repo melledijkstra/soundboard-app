@@ -56,15 +56,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     SoundBoardAdapter adapter;
 
-    BroadcastReceiver onDownloadComplete = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            soundManager.downloadComplete(intent);
-        }
-    };
-
     // Views
     SwipeRefreshLayout refresher;
+    private int lastPosition = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,10 +76,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             fab.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    Intent getContentIntent = FileUtils.createGetContentIntent();
+                    Toast.makeText(MainActivity.this, "This feature isn't there yet, go to sound.melledijkstra.nl to create a sound", Toast.LENGTH_SHORT).show();
+                    /*Intent getContentIntent = FileUtils.createGetContentIntent();
 
                     Intent intent = Intent.createChooser(getContentIntent, "Select a file");
-                    startActivityForResult(intent, CHOOSE_FILE_INTENT);
+                    startActivityForResult(intent, CHOOSE_FILE_INTENT);*/
                 }
             });
         }
@@ -120,14 +115,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     @Override
     protected void onResume() {
         super.onResume();
-        registerReceiver(onDownloadComplete, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        // TODO: when broadcast listener doesn't know the file is downloaded then the sound in the database doesn't get updated
-        unregisterReceiver(onDownloadComplete);
     }
 
     @Override
@@ -248,7 +240,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        soundManager.playSound(position);
+        if(lastPosition == position && soundManager.isPlaying()) {
+            soundManager.stopPlaying();
+        } else {
+            soundManager.playSound(position);
+            lastPosition = position;
+        }
     }
 
     @Override
@@ -259,7 +256,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     @Override
     public boolean onItemLongClick(AdapterView<?> parent, View view, final int position, long id) {
-        final String name = soundManager.getSound(position).name;
+        /*final String name = soundManager.getSound(position).name;
         new AlertDialog.Builder(this)
                 .setTitle("Delete")
                 .setMessage("Delete "+name+" ?")
@@ -270,6 +267,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                     }
                 }).setNegativeButton("No, keep that shit", null)
                 .show();
+        return true;*/
         return true;
     }
 
