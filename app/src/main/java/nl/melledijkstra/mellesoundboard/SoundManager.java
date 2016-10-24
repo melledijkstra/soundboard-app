@@ -16,6 +16,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -59,8 +60,14 @@ public class SoundManager implements MediaPlayer.OnPreparedListener, MediaPlayer
         mp.setOnCompletionListener(this);
         sounds = new ArrayList<>();
         soundsDB = new SoundsDatabaseHelper(context);
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        Log.d(TAG, "Latest sync time: "+prefs.getInt(Config.Preferences.LAST_SYNC_TIME,0));
+        checkIfAppStorageExists();
+    }
+
+    private void checkIfAppStorageExists() {
+        if(Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
+            File directory = new File(MEDIA_PATH);
+            directory.mkdirs();
+        }
     }
 
     /**
@@ -134,7 +141,7 @@ public class SoundManager implements MediaPlayer.OnPreparedListener, MediaPlayer
 
             downloadSoundTask.execute(sound);
         } else {
-            Toast.makeText(context, "You don't have wifi connection", Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, R.string.msg_no_wifi_connection, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -146,7 +153,7 @@ public class SoundManager implements MediaPlayer.OnPreparedListener, MediaPlayer
             Log.d(TAG, "Starting synchronization");
             new GetChangesTask(this).execute(timestamp);
         } else {
-            Toast.makeText(context, "Get some internet first you dummy! ;p", Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, R.string.msg_no_internet, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -191,12 +198,12 @@ public class SoundManager implements MediaPlayer.OnPreparedListener, MediaPlayer
 
     @Override
     public void onDownloadFailed(int status) {
-        Toast.makeText(context, "Could not download this sound, maybe try again?", Toast.LENGTH_SHORT).show();
+        Toast.makeText(context, R.string.mdg_could_not_download_sound, Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onSoundNotFound(Sound sound) {
-        Toast.makeText(context, "Sound was deleted on server!", Toast.LENGTH_SHORT).show();
+        Toast.makeText(context, R.string.sound_deleted_on_server, Toast.LENGTH_SHORT).show();
         soundsDB.deleteSound(sound.id);
         sound.deleteFileIfExists();
         syncLocalSounds();

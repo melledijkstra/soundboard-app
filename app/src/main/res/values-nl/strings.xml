@@ -4,4 +4,12 @@
     <string name="action_sync">Nieuwe sounds ophalen!</string>
     <string name="action_settings">Instellingen</string>
     <string name="choose_file">Kies Bestand</string>
+    <string name="delete_local_database">Verwijder lokale database</string>
+    <string name="create_feature_not_available">Dit heb ik nog niet gemaakt. Ga naar sound.melledijkstra.nl om een geluidje toe te voegen</string>
+    <string name="mdg_could_not_download_sound">Kon sound niet downloaden, probeer nog eens?</string>
+    <string name="msg_no_internet">Jonguu je hebt geen internet!  :/</string>
+    <string name="msg_no_wifi_connection">Je hebt geen wifi, en wil niet al je MB\'s verspillen ;p</string>
+    <string name="msg_sync_start">Op zoek naar leuke geluidjes :)</string>
+    <string name="question_delete_all_sounds">Weet je zeker dat je lokale sounds wil verwijderen? (je kan ze weer downloaden)</string>
+    <string name="sound_deleted_on_server">Geluid was al verwijderd op server!</string>
 </resources>

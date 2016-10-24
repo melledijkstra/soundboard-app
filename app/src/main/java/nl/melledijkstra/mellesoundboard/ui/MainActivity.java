@@ -1,20 +1,11 @@
 package nl.melledijkstra.mellesoundboard.ui;
 
-import android.Manifest;
-import android.app.Activity;
-import android.app.DownloadManager;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -29,8 +20,6 @@ import android.widget.Toast;
 
 import com.ipaulpro.afilechooser.utils.FileUtils;
 
-import org.json.JSONArray;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -40,7 +29,6 @@ import java.io.OutputStream;
 
 import nl.melledijkstra.mellesoundboard.Config;
 import nl.melledijkstra.mellesoundboard.R;
-import nl.melledijkstra.mellesoundboard.Sound;
 import nl.melledijkstra.mellesoundboard.SoundBoardAdapter;
 import nl.melledijkstra.mellesoundboard.SoundManager;
 import nl.melledijkstra.mellesoundboard.Utils;
@@ -50,7 +38,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private static final String TAG = MainActivity.class.getSimpleName();
 
     private static final int CHOOSE_FILE_INTENT = 2323;
-    private static final int REQUEST_EXTERNAL_STORAGE = 54;
+//    private static final int REQUEST_EXTERNAL_STORAGE = 54;
 
     private SoundManager soundManager;
 
@@ -76,7 +64,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             fab.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    Toast.makeText(MainActivity.this, "This feature isn't there yet, go to sound.melledijkstra.nl to create a sound", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, R.string.create_feature_not_available, Toast.LENGTH_SHORT).show();
                     /*Intent getContentIntent = FileUtils.createGetContentIntent();
 
                     Intent intent = Intent.createChooser(getContentIntent, "Select a file");
@@ -104,8 +92,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             }
         });
 
-        // Check if we can use storage permissions
-        verifyStoragePermissions(this);
+//        // Check if we can use storage permissions
+//        verifyStoragePermissions(this);
 
         soundManager.syncWithServer();
 
@@ -165,19 +153,19 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
      *
      * @param activity
      */
-    public static void verifyStoragePermissions(Activity activity) {
-        // Check if we have write permission
-        int permission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-
-        if (permission != PackageManager.PERMISSION_GRANTED) {
-            // We don't have permission so prompt the user
-            ActivityCompat.requestPermissions(
-                activity,
-                new String[] { Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE },
-                REQUEST_EXTERNAL_STORAGE
-            );
-        }
-    }
+//    public static void verifyStoragePermissions(Activity activity) {
+//        // Check if we have write permission
+//        int permission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+//
+//        if (permission != PackageManager.PERMISSION_GRANTED) {
+//            // We don't have permission so prompt the user
+//            ActivityCompat.requestPermissions(
+//                activity,
+//                new String[] { Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE },
+//                REQUEST_EXTERNAL_STORAGE
+//            );
+//        }
+//    }
 
     private void refreshGridViewWithSounds() {
         soundManager.syncLocalSounds();
@@ -217,12 +205,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         switch (id) {
             case R.id.action_sync:
-                Toast.makeText(this, "Starting synchronization...", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.msg_sync_start, Toast.LENGTH_SHORT).show();
                 soundManager.syncWithServer();
                 break;
             case R.id.action_delete_sounds:
                 new AlertDialog.Builder(this)
-                        .setMessage("Are you sure you want to delete all local sounds?")
+                        .setMessage(getString(R.string.question_delete_all_sounds))
                         .setNegativeButton("NOOHH!", null)
                         .setPositiveButton("Ehh yeah?", new DialogInterface.OnClickListener() {
                             @Override

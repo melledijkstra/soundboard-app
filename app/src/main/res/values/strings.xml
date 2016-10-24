@@ -4,4 +4,11 @@
     <string name="choose_file">Choose File</string>
     <string name="action_sync">Sync with server</string>
     <string name="delete_local_database">Delete local database</string>
+    <string name="sound_deleted_on_server">Sound was deleted on server!</string>
+    <string name="mdg_could_not_download_sound">Could not download this sound, maybe try again?</string>
+    <string name="msg_no_internet">Get some internet first you dummy! ;p</string>
+    <string name="msg_no_wifi_connection">You don\'t have wifi connection</string>
+    <string name="create_feature_not_available">This feature isn\'t there yet, go to sound.melledijkstra.nl to create a sound</string>
+    <string name="msg_sync_start">Starting synchronization…</string>
+    <string name="question_delete_all_sounds">Are you sure you want to delete all local sounds?</string>
 </resources>

@@ -6,6 +6,7 @@ import android.os.AsyncTask;
 import android.os.Environment;
 import android.os.PowerManager;
 import android.support.annotation.Nullable;
+import android.support.annotation.RequiresPermission;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -15,6 +16,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.jar.Manifest;
 
 import nl.melledijkstra.mellesoundboard.Sound;
 import nl.melledijkstra.mellesoundboard.SoundManager;
@@ -48,6 +50,7 @@ public class DownloadSoundTask extends AsyncTask<Sound, Integer, String> {
     }
 
     @Override
+    @RequiresPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
     protected String doInBackground(Sound... sounds) {
         this.sound = sounds[0];
         // For downloading
